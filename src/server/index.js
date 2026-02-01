@@ -1,3 +1,5 @@
+// src/server/index.js
+import 'dotenv/config';
 import express from 'express';
 import notesRoute from '../routes/index.js';
 import ErrorHandler from '../middlewares/error.js';
