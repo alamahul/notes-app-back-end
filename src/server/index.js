@@ -13,19 +13,19 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.get('/', (req, res) => {
-    res.status(200).json({
-        message: 'Welcome to Backend Fundamental API',
-    });
+  res.status(200).json({
+    message: 'Welcome to Backend Fundamental API',
+  });
 });
 
 app.use(notesRoute);
 
 // 404 Handler
 app.use((req, res) => {
-    res.status(404).json({
-        status: 'failed',
-        message: 'Route not found',
-    });
+  res.status(404).json({
+    status: 'failed',
+    message: 'Route not found',
+  });
 });
 
 // Error Handler (harus di paling akhir)
