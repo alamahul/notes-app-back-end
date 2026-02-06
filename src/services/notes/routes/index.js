@@ -11,12 +11,12 @@ import { notePayloadSchema, noteUpdatePayloadSchema } from '../../../services/no
 import authenticateToken from '../../../middlewares/auth.js';
 const router = Router();
 
-router.use(authenticateToken); // Remove this to avoid global interception when mounted at /
+// router.use(authenticateToken); // Remove this to avoid global interception when mounted at /
 
-router.post('/', validate(notePayloadSchema), createNote);
-router.get('/', getNotes);
-router.get('/:id', getNoteById);
-router.put('/:id', validate(noteUpdatePayloadSchema), editNoteById);
-router.delete('/:id', deleteNoteById);
+router.post('/notes', authenticateToken, validate(notePayloadSchema), createNote);
+router.get('/notes', authenticateToken, getNotes);
+router.get('/notes/:id', authenticateToken, getNoteById);
+router.put('/notes/:id', authenticateToken, validate(noteUpdatePayloadSchema), editNoteById);
+router.delete('/notes/:id', authenticateToken, deleteNoteById);
 
 export default router;

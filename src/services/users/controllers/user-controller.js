@@ -4,9 +4,6 @@ import InvariantError from '../../../exceptions/invariant-error.js';
 import NotFoundError from '../../../exceptions/not-found-error.js';
 
 export const createUser = async (req, res, next) => {
-    if (!req.validated) {
-        return next(new InvariantError('Request body user tidak valid'));
-    }
     const { username, password, fullname } = req.validated;
 
     const isUsernameExist = await UserRepositories.verifyNewUsername(username);

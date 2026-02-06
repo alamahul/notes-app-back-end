@@ -9,8 +9,8 @@ import {
 import authenticateToken from '../../../middlewares/auth.js';
 const router = Router();
 
-router.post('/', validate(postAuthenticationPayloadSchema), login);
-router.put('/', validate(putAuthenticationPayloadSchema), refreshToken);
-router.delete('/', validate(deleteAuthenticationPayloadSchema), logout);
+router.post('/authentications', validate(postAuthenticationPayloadSchema), login);
+router.put('/authentications', validate(putAuthenticationPayloadSchema), refreshToken);
+router.delete('/authentications', validate(deleteAuthenticationPayloadSchema), logout);
 
 export default router;

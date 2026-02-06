@@ -5,8 +5,8 @@ import authentications from '../services/authentications/routes/index.js';
 
 const router = Router();
 
-router.use('/notes', notes);
-router.use('/users', users);
-router.use('/authentications', authentications);
+router.use('/', notes);
+router.use('/', users);
+router.use('/', authentications);
 
 export default router;

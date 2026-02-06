@@ -6,9 +6,6 @@ import InvariantError from '../../../exceptions/invariant-error.js';
 import AuthenticationError from '../../../exceptions/authentication-error.js';
 
 export const login = async (req, res, next) => {
-    if (!req.validated) {
-        return next(new InvariantError('Request body login tidak valid'));
-    }
     const { username, password } = req.validated;
     const userId = await UserRepositories.verifyUserCredential(username, password);
 
@@ -25,13 +22,9 @@ export const login = async (req, res, next) => {
         accessToken,
         refreshToken,
     });
-
 };
 
 export const refreshToken = async (req, res, next) => {
-    if (!req.validated) {
-        return next(new InvariantError('Request body refresh token tidak valid'));
-    }
     const { refreshToken } = req.validated;
 
     const result = await AuthenticationRepositories.verifyRefreshToken(refreshToken);
@@ -47,9 +40,6 @@ export const refreshToken = async (req, res, next) => {
 };
 
 export const logout = async (req, res, next) => {
-    if (!req.validated) {
-        return next(new InvariantError('Request payload tidak valid'));
-    }
     const { refreshToken } = req.validated;
 
     const result = await AuthenticationRepositories.verifyRefreshToken(refreshToken);
