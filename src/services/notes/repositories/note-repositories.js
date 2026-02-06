@@ -1,8 +1,12 @@
 import pool from '../../../database/index.js';
 import { nanoid } from 'nanoid';
+import collaborationRepositories from '../../collaborations/repositories/collaboration-repositories.js';
+
+
 class NoteRepositories {
   constructor() {
     this.pool = pool;
+    this.collaborationRepositories = collaborationRepositories;
   }
 
   async createNote({ title, body, tags, owner }) {
@@ -23,8 +27,11 @@ class NoteRepositories {
 
   async getNoteById(id) {
     const query = {
-      text: 'SELECT * FROM notes WHERE id = $1',
-      values: [id],
+    text:`SELECT notes.*, users.username
+    FROM notes
+    LEFT JOIN users ON users.id = notes.owner
+    WHERE notes.id = $1`,
+    values: [id],
     };
 
     const result = await this.pool.query(query);
@@ -37,13 +44,17 @@ class NoteRepositories {
     const updatedAt = new Date().toISOString();
 
     const query = {
-      text: 'UPDATE notes SET title = $1, body = $2, tags = $3, updated_at = $4 WHERE id = $5 RETURNING id',
+      text: 'UPDATE notes SET title = $1, body = $2, tags = $3, updated_at = $4 WHERE id = $5 RETURNING id, title, body, tags, updated_at',
       values: [title, body, tags, updatedAt, id],
     };
 
+    const querySelect = {
+      text: 'SELECT * FROM notes WHERE id = $1',
+      values: [id],
+    }
     const result = await this.pool.query(query);
-
-    return result.rows[0];
+    const updatedNote = await this.pool.query(querySelect);
+    return updatedNote.rows[0];
   }
 
   async deleteNote(id) {
@@ -63,7 +74,10 @@ class NoteRepositories {
 
   async getNotes(owner) {
     const query = {
-      text: 'SELECT * FROM notes WHERE owner = $1',
+      text: `SELECT notes.* FROM notes
+      LEFT JOIN collaborations ON collaborations.note_id = notes.id
+      WHERE notes.owner = $1 OR collaborations.user_id = $1
+      GROUP BY notes.id`,
       values: [owner],
     };
     const result = await this.pool.query(query);
@@ -84,6 +98,18 @@ class NoteRepositories {
       return null;
     }
     return result.rows[0];
+  }
+
+  async verifyNoteAccess(noteId, userId) {
+    const ownerResult = await this.verifyNoteOwner(noteId, userId);
+  
+    if (ownerResult) {
+      return ownerResult;
+    }
+  
+    const result =  await this.collaborationRepositories.verifyCollaborator(noteId, userId);
+  
+    return result.rowCount > 0;
   }
 
 }
