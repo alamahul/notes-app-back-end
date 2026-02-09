@@ -1,12 +1,14 @@
 import pool from '../../../database/index.js';
 import { nanoid } from 'nanoid';
 import collaborationRepositories from '../../collaborations/repositories/collaboration-repositories.js';
-
+import CacheService from '../../../cache/redis.service.js'
 
 class NoteRepositories {
   constructor() {
     this.pool = pool;
     this.collaborationRepositories = collaborationRepositories;
+    this.cacheService = new CacheService();
+
   }
 
   async createNote({ title, body, tags, owner }) {
@@ -20,6 +22,7 @@ class NoteRepositories {
     };
 
     const result = await this.pool.query(query);
+    await this.cacheService.delete(`notes:${owner}`);
     return result.rows[0];
   }
 
@@ -53,7 +56,12 @@ class NoteRepositories {
       values: [id],
     }
     const result = await this.pool.query(query);
+    
     const updatedNote = await this.pool.query(querySelect);
+    const owner = result.rows[0].owner;
+    if (updatedNote.rows[0]) {
+      await this.cacheService.delete(`notes:${owner}`);
+    }
     return updatedNote.rows[0];
   }
 
@@ -64,16 +72,23 @@ class NoteRepositories {
     };
 
     const result = await this.pool.query(query);
-
-    if (!result.rows.length) {
-      return null;
+ 
+    const owner = result.rows[0].owner;
+    
+    if (result.rows[0]) {
+      await this.cacheService.delete(`notes:${owner}`);
     }
-
+    
     return result.rows[0].id;
   }
 
   async getNotes(owner) {
-    const query = {
+    const cacheKey = `notes:${owner}`;
+    try {
+      const cachedNotes = await this.cacheService.get(cacheKey);
+      return JSON.parse(cachedNotes);
+    } catch (error) {
+      const query = {
       text: `SELECT notes.* FROM notes
       LEFT JOIN collaborations ON collaborations.note_id = notes.id
       WHERE notes.owner = $1 OR collaborations.user_id = $1
@@ -81,7 +96,12 @@ class NoteRepositories {
       values: [owner],
     };
     const result = await this.pool.query(query);
+    await this.cacheService.set(cacheKey, JSON.stringify(result.rows));
+
     return result.rows;
+    }
+
+    return null;
   }
 
   async verifyNoteOwner(id, owner) {

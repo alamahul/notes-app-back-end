@@ -1,9 +1,11 @@
 import { Pool } from 'pg';
 import { nanoid } from 'nanoid';
- 
+import CacheService from '../../../cache/redis.service.js'
+
 class CollaborationRepositories {
  constructor() {
    this.pool = new Pool();
+   this.cacheService = new CacheService();
  }
  
 async addCollaboration(noteId, userId) {
@@ -15,6 +17,7 @@ async addCollaboration(noteId, userId) {
    };
  
    const result = await this.pool.query(query);
+    await this.cacheService.delete(`notes:${userId}`);
    return result.rows[0].id;
  }
  async deleteCollaboration(noteId, userId) {
@@ -24,7 +27,7 @@ async addCollaboration(noteId, userId) {
   };
  
   const result = await this.pool.query(query);
-  
+   await this.cacheService.delete(`notes:${userId}`);
   return result.rows[0];
  }
  async verifyCollaborator(noteId, userId) {
